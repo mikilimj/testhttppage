@@ -1,14 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>test</title>
-    <link rel="stylesheet" href="style.css">
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>HTTP Status Explorer</title>
+	<link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>test</h1>
-    <h2>httptestpage</h2>
-    <h3>deployed on cooli</h3>
+	<main class="container">
+		<header class="hero">
+			<h1>HTTP Status Explorer</h1>
+			<p>Find status codes fast and understand what they mean.</p>
+		</header>
+
+		<section class="panel controls">
+			<label>
+				Search by code or name
+				<input id="search" type="text" placeholder="Try 404, 2xx, not found...">
+			</label>
+
+			<label>
+				Category
+				<select id="group">
+					<option value="all">All</option>
+					<option value="1">1xx Informational</option>
+					<option value="2">2xx Success</option>
+					<option value="3">3xx Redirection</option>
+					<option value="4">4xx Client Error</option>
+					<option value="5">5xx Server Error</option>
+				</select>
+			</label>
+		</section>
+
+		<section class="panel">
+			<h2>Results</h2>
+			<ul id="list" class="status-list"></ul>
+			<p id="empty" class="empty hidden">No statuses matched your search.</p>
+		</section>
+
+		<section class="panel">
+			<h2>Quick Examples</h2>
+			<div class="examples">
+				<button type="button" class="example" data-query="200">200</button>
+				<button type="button" class="example" data-query="201">201</button>
+				<button type="button" class="example" data-query="301">301</button>
+				<button type="button" class="example" data-query="404">404</button>
+				<button type="button" class="example" data-query="429">429</button>
+				<button type="button" class="example" data-query="500">500</button>
+			</div>
+		</section>
+	</main>
+
+	<script src="script.js"></script>
 </body>
 </html>

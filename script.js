@@ -1,127 +1,81 @@
-const methodEl = document.getElementById('method');
-const urlEl = document.getElementById('url');
-const headersEl = document.getElementById('headers');
-const bodyEl = document.getElementById('body');
-const sendBtn = document.getElementById('sendBtn');
-const clearBtn = document.getElementById('clearBtn');
-const copyBtn = document.getElementById('copyBtn');
-const outputEl = document.getElementById('output');
-const statusTextEl = document.getElementById('statusText');
-const responseMetaEl = document.getElementById('responseMeta');
+const statuses = [
+    { code: 100, title: 'Continue', description: 'Client should continue with request body.' },
+    { code: 101, title: 'Switching Protocols', description: 'Server switches to another protocol.' },
+    { code: 200, title: 'OK', description: 'Request succeeded normally.' },
+    { code: 201, title: 'Created', description: 'Resource created successfully.' },
+    { code: 204, title: 'No Content', description: 'Request succeeded but no response body.' },
+    { code: 301, title: 'Moved Permanently', description: 'Resource has a new permanent URL.' },
+    { code: 302, title: 'Found', description: 'Resource temporarily available at another URL.' },
+    { code: 304, title: 'Not Modified', description: 'Cached version is still valid.' },
+    { code: 400, title: 'Bad Request', description: 'Request syntax is invalid.' },
+    { code: 401, title: 'Unauthorized', description: 'Authentication is required.' },
+    { code: 403, title: 'Forbidden', description: 'Server understood but refuses access.' },
+    { code: 404, title: 'Not Found', description: 'Requested resource does not exist.' },
+    { code: 409, title: 'Conflict', description: 'Request conflicts with current state.' },
+    { code: 429, title: 'Too Many Requests', description: 'Rate limit has been exceeded.' },
+    { code: 500, title: 'Internal Server Error', description: 'Unexpected server-side failure.' },
+    { code: 502, title: 'Bad Gateway', description: 'Invalid response from upstream server.' },
+    { code: 503, title: 'Service Unavailable', description: 'Server cannot handle request currently.' }
+];
 
-const bodyMethods = new Set(['POST', 'PUT', 'PATCH']);
+const searchEl = document.getElementById('search');
+const groupEl = document.getElementById('group');
+const listEl = document.getElementById('list');
+const emptyEl = document.getElementById('empty');
+const exampleButtons = document.querySelectorAll('.example');
 
-function setStatus(message, isError = false) {
-    statusTextEl.textContent = message;
-    statusTextEl.classList.toggle('status--error', isError);
+function groupFromCode(code) {
+    return String(code)[0];
 }
 
-function setMeta({ status = '—', time = '—', size = '—' }) {
-    responseMetaEl.innerHTML = `<span>Status: ${status}</span><span>Time: ${time}</span><span>Size: ${size}</span>`;
+function matchesQuery(item, query) {
+    if (!query) return true;
+
+    const raw = query.toLowerCase().trim();
+    const compact = raw.replace(/\s+/g, '');
+    const itemCode = String(item.code);
+
+    if (compact.endsWith('xx') && compact.length === 3 && /[1-5]xx/.test(compact)) {
+        return itemCode.startsWith(compact[0]);
+    }
+
+    return itemCode.includes(compact) ||
+        item.title.toLowerCase().includes(raw) ||
+        item.description.toLowerCase().includes(raw);
 }
 
-function formatOutput(data) {
-    if (typeof data === 'string') {
-        return data;
-    }
-    return JSON.stringify(data, null, 2);
-}
+function render() {
+    const query = searchEl.value;
+    const group = groupEl.value;
 
-function parseJsonInput(text, label) {
-    const trimmed = text.trim();
-    if (!trimmed) return null;
-    try {
-        return JSON.parse(trimmed);
-    } catch {
-        throw new Error(`${label} must be valid JSON.`);
-    }
-}
-
-async function sendRequest() {
-    const method = methodEl.value;
-    const url = urlEl.value.trim();
-
-    if (!url) {
-        setStatus('URL is required.', true);
-        return;
-    }
-
-    let headers = {};
-    let body = null;
-
-    try {
-        headers = parseJsonInput(headersEl.value, 'Headers') || {};
-        body = parseJsonInput(bodyEl.value, 'Body');
-    } catch (error) {
-        setStatus(error.message, true);
-        return;
-    }
-
-    if (!bodyMethods.has(method)) {
-        body = null;
-    }
-
-    sendBtn.disabled = true;
-    setStatus('Sending...');
-    setMeta({});
-
-    const start = performance.now();
-
-    try {
-        const response = await fetch(url, {
-            method,
-            headers,
-            body: body !== null ? JSON.stringify(body) : null
-        });
-
-        const elapsed = `${Math.round(performance.now() - start)}ms`;
-        const contentType = response.headers.get('content-type') || '';
-        const rawText = await response.text();
-
-        let payload = rawText;
-        if (contentType.includes('application/json')) {
-            try {
-                payload = JSON.parse(rawText);
-            } catch {
-                payload = rawText;
-            }
+    const filtered = statuses.filter((item) => {
+        if (group !== 'all' && groupFromCode(item.code) !== group) {
+            return false;
         }
+        return matchesQuery(item, query);
+    });
 
-        outputEl.textContent = formatOutput(payload);
-        setMeta({
-            status: `${response.status} ${response.statusText}`,
-            time: elapsed,
-            size: `${new Blob([rawText]).size} bytes`
-        });
-        setStatus(response.ok ? 'Request complete.' : 'Request completed with server error.', !response.ok);
-    } catch (error) {
-        setStatus('Network error or blocked by CORS policy.', true);
-        outputEl.textContent = error.message;
-        setMeta({ status: 'Failed' });
-    } finally {
-        sendBtn.disabled = false;
-    }
+    listEl.innerHTML = filtered
+        .map((item) => `
+            <li class="status-item group-${groupFromCode(item.code)}">
+                <h3>${item.code} — ${item.title}</h3>
+                <p>${item.description}</p>
+            </li>
+        `)
+        .join('');
+
+    emptyEl.classList.toggle('hidden', filtered.length > 0);
 }
 
-function clearAll() {
-    headersEl.value = '';
-    bodyEl.value = '';
-    outputEl.textContent = 'No request sent yet.';
-    setMeta({});
-    setStatus('Cleared');
-}
+searchEl.addEventListener('input', render);
+groupEl.addEventListener('change', render);
 
-async function copyResponse() {
-    try {
-        await navigator.clipboard.writeText(outputEl.textContent);
-        setStatus('Response copied.');
-    } catch {
-        setStatus('Copy failed.', true);
-    }
-}
+exampleButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+        searchEl.value = button.dataset.query || '';
+        render();
+        searchEl.focus();
+    });
+});
 
-sendBtn.addEventListener('click', sendRequest);
-clearBtn.addEventListener('click', clearAll);
-copyBtn.addEventListener('click', copyResponse);
-
-setMeta({});
+render();
