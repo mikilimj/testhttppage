@@ -3,12 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>test</title>
+    <title>HTTP Test Server Playground</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>test</h1>
-    <h2>httptestpage</h2>
-    <h3>deployed on coolify</h3>
+    <main class="app">
+        <header class="app__header">
+            <h1>HTTP Playground</h1>
+            <p>Build and send requests, inspect responses, and copy results.</p>
+        </header>
+
+        <section class="card">
+            <div class="request-grid">
+                <label class="field">
+                    <span>Method</span>
+                    <select id="method">
+                        <option>GET</option>
+                        <option>POST</option>
+                        <option>PUT</option>
+                        <option>PATCH</option>
+                        <option>DELETE</option>
+                        <option>HEAD</option>
+                        <option>OPTIONS</option>
+                    </select>
+                </label>
+
+                <label class="field field--url">
+                    <span>URL</span>
+                    <input id="url" type="url" value="https://jsonplaceholder.typicode.com/todos/1" placeholder="https://api.example.com/resource">
+                </label>
+            </div>
+
+            <label class="field">
+                <span>Headers (JSON)</span>
+                <textarea id="headers" rows="5" placeholder='{"Content-Type":"application/json"}'></textarea>
+            </label>
+
+            <label class="field">
+                <span>Body (for POST/PUT/PATCH)</span>
+                <textarea id="body" rows="8" placeholder='{"title":"New item"}'></textarea>
+            </label>
+
+            <div class="actions">
+                <button id="sendBtn" class="btn btn--primary" type="button">Send Request</button>
+                <button id="clearBtn" class="btn" type="button">Clear</button>
+                <span id="statusText" class="status">Ready</span>
+            </div>
+        </section>
+
+        <section class="card card--response">
+            <div class="response-head">
+                <h2>Response</h2>
+                <button id="copyBtn" class="btn" type="button">Copy</button>
+            </div>
+
+            <div class="response-meta" id="responseMeta">
+                <span>Status: —</span>
+                <span>Time: —</span>
+                <span>Size: —</span>
+            </div>
+
+            <pre id="output" class="output">No request sent yet.</pre>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
 </body>
 </html>
